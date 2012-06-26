@@ -328,7 +328,7 @@ static struct clk div6_clks[DIV6_NR] = {
 			vck_parent, ARRAY_SIZE(vck_parent), 12, 3),
 	[DIV6_VCK3] = SH_CLK_DIV6_EXT(VCLKCR3, 0,
 			vck_parent, ARRAY_SIZE(vck_parent), 12, 3),
-	[DIV6_ZB1] = SH_CLK_DIV6_EXT(ZBCKCR, 0,
+	[DIV6_ZB1] = SH_CLK_DIV6_EXT(ZBCKCR, CLK_ENABLE_ON_INIT,
 			pll_parent, ARRAY_SIZE(pll_parent), 7, 1),
 	[DIV6_FLCTL] = SH_CLK_DIV6_EXT(FLCKCR, 0,
 			pll_parent, ARRAY_SIZE(pll_parent), 7, 1),
