@@ -30,6 +30,7 @@
 #include <linux/mmc/sh_mobile_sdhi.h>
 #include <linux/mfd/tmio.h>
 #include <linux/platform_device.h>
+#include <linux/smsc911x.h>
 #include <linux/videodev2.h>
 #include <sound/sh_fsi.h>
 #include <sound/simple_card.h>
@@ -61,6 +62,35 @@
  *
  * # amixer set "LINEOUT Mixer DACL" on
  */
+
+/* SMSC 9221 */
+static struct resource smsc9221_resources[] = {
+	[0] = {
+		.start	= 0x10000000, /* CS4 */
+		.end	= 0x100000ff,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= intcs_evt2irq(0x260), /* IRQ3 */
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static struct smsc911x_platform_config smsc9221_platdata = {
+	.flags		= SMSC911X_USE_32BIT | SMSC911X_SAVE_MAC_ADDRESS,
+	.phy_interface	= PHY_INTERFACE_MODE_MII,
+	.irq_polarity	= SMSC911X_IRQ_POLARITY_ACTIVE_LOW,
+	.irq_type	= SMSC911X_IRQ_TYPE_PUSH_PULL,
+};
+
+static struct platform_device smsc_device = {
+	.name		= "smsc911x",
+	.dev  = {
+		.platform_data = &smsc9221_platdata,
+	},
+	.resource	= smsc9221_resources,
+	.num_resources	= ARRAY_SIZE(smsc9221_resources),
+};
 
 /* LCDC */
 static struct fb_videomode kzm_lcdc_mode = {
@@ -299,6 +329,7 @@ static struct i2c_board_info i2c3_devices[] = {
 };
 
 static struct platform_device *kzm_devices[] __initdata = {
+	&smsc_device,
 	&lcdc_device,
 	&mmc_device,
 	&sdhi0_device,
@@ -442,6 +473,13 @@ static void __init kzm_init(void)
 	gpio_request(GPIO_FN_FSIAIBT,	NULL);
 	gpio_request(GPIO_FN_FSIAISLD,	NULL);
 	gpio_request(GPIO_FN_FSIAOSLD,	NULL);
+
+	/* CS4 for SMSC/USB */
+	gpio_request(GPIO_FN_CS4_, NULL); /* CS4 */
+
+	/* SMSC */
+	gpio_request(GPIO_PORT224, NULL); /* IRQ3 */
+	gpio_direction_input(GPIO_PORT224);
 
 #ifdef CONFIG_CACHE_L2X0
 	/* Early BRESP enable, Shared attribute override enable, 64K*8way */
