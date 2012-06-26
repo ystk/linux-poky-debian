@@ -31,6 +31,7 @@
 #include <linux/mfd/tmio.h>
 #include <linux/platform_device.h>
 #include <linux/smsc911x.h>
+#include <linux/usb/r8a66597.h>
 #include <linux/videodev2.h>
 #include <sound/sh_fsi.h>
 #include <sound/simple_card.h>
@@ -90,6 +91,35 @@ static struct platform_device smsc_device = {
 	},
 	.resource	= smsc9221_resources,
 	.num_resources	= ARRAY_SIZE(smsc9221_resources),
+};
+
+/* USB external chip */
+static struct r8a66597_platdata usb_host_data = {
+	.on_chip	= 0,
+	.xtal		= R8A66597_PLATDATA_XTAL_48MHZ,
+};
+
+static struct resource usb_resources[] = {
+	[0] = {
+		.start	= 0x10010000,
+		.end	= 0x1001ffff - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= intcs_evt2irq(0x220), /* IRQ1 */
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static struct platform_device usb_host_device = {
+	.name	= "r8a66597_hcd",
+	.dev = {
+		.platform_data		= &usb_host_data,
+		.dma_mask		= NULL,
+		.coherent_dma_mask	= 0xffffffff,
+	},
+	.num_resources	= ARRAY_SIZE(usb_resources),
+	.resource	= usb_resources,
 };
 
 /* LCDC */
@@ -330,6 +360,7 @@ static struct i2c_board_info i2c3_devices[] = {
 
 static struct platform_device *kzm_devices[] __initdata = {
 	&smsc_device,
+	&usb_host_device,
 	&lcdc_device,
 	&mmc_device,
 	&sdhi0_device,
